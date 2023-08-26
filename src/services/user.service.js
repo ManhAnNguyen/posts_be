@@ -4,7 +4,7 @@ const get = () =>
   db.query(
     `SELECT U.id,U.username,U.created_at,R.role
     from users as U 
-    left join userroles as U_R on U.id = U_R.id_user
+    left join userRoles as U_R on U.id = U_R.id_user
     left join roles as R on R.id = U_R.id_role
     `
   );
@@ -22,7 +22,7 @@ const findOne = async (key, value) => {
   const data = await db.query(
     `SELECT U.id,U.username,U.created_at,R.role
      from users as U 
-     left join userroles as U_R on U.id = U_R.id_user
+     left join userRoles as U_R on U.id = U_R.id_user
      left join roles as R on R.id = U_R.id_role
      WHERE U.${key} = ?
   `,
@@ -31,10 +31,10 @@ const findOne = async (key, value) => {
   return data[0];
 };
 
-const findAllUserOne = async (key,value) => {
-  const data = await db.query(`SELECT * FROM users WHERE ${key} = ?`,[value])
-  return data[0]
-}
+const findAllUserOne = async (key, value) => {
+  const data = await db.query(`SELECT * FROM users WHERE ${key} = ?`, [value]);
+  return data[0];
+};
 
 const update = async (keys, values, keyCondition, valueCondition) => {
   let queryUpdate = "";
@@ -51,4 +51,4 @@ const update = async (keys, values, keyCondition, valueCondition) => {
 
 const deleteUser = (id) => db.query(`DELETE FROM users where id = ?`, [id]);
 
-module.exports = { get, create, deleteUser, findOne, update ,findAllUserOne};
+module.exports = { get, create, deleteUser, findOne, update, findAllUserOne };

@@ -5,6 +5,8 @@ const jwt = require("jsonwebtoken");
 const refreshController = async (req, res) => {
   const refreshToken = req.cookies?.refreshToken;
 
+  console.log(req);
+
   if (!refreshToken) throw new AppError("refreshToken is required", 400);
   const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
   const findUser = await userService.findOne("username", decoded.username);
