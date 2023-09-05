@@ -6,6 +6,8 @@ const get = () =>
     from users as U 
     left join userRoles as U_R on U.id = U_R.id_user
     left join roles as R on R.id = U_R.id_role
+    WHERE U.isDeleted IS NOT TRUE
+
     `
   );
 
@@ -24,7 +26,7 @@ const findOne = async (key, value) => {
      from users as U 
      left join userRoles as U_R on U.id = U_R.id_user
      left join roles as R on R.id = U_R.id_role
-     WHERE U.${key} = ?
+     WHERE U.${key} = ? AND  U.isDeleted IS NOT TRUE
   `,
     [value]
   );
@@ -49,6 +51,12 @@ const update = async (keys, values, keyCondition, valueCondition) => {
   ]);
 };
 
-const deleteUser = (id) => db.query(`DELETE FROM users where id = ?`, [id]);
+const deleteUser = (id) =>
+  db.query(
+    `
+    UPDATE  users SET isDeleted = true WHERE id = ? 
+`,
+    [id]
+  );
 
 module.exports = { get, create, deleteUser, findOne, update, findAllUserOne };

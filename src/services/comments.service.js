@@ -2,9 +2,24 @@ const db = require("./db.service");
 
 const getAll = () =>
   db.query(`
-  SELECT *, (
-    select count(*) from likeComments WHERE id_comment = C.id
- ) as totalLike FROM comments  as C
+  SELECT
+  C.id as id,
+  C.content as content,
+  C.created_at as createdAt,
+  C.updated_at as updatedAt,
+  C.user_id as userId,
+  C.post_id as postId
+  , (
+    select count(*) 
+    from likeComments 
+    join users on users.id = likeComments.id_user
+    WHERE id_comment = C.id
+    AND users.isDeleted IS NOT TRUE
+ ) as totalLike 
+  FROM comments  as C
+  join users as U
+  on C.user_id = U.id
+  WHERE U.isDeleted IS NOT TRUE
  `);
 const create = (content, created_at, update_at, user_id, post_id) =>
   db.query(

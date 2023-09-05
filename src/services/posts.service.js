@@ -8,11 +8,19 @@ const get = () =>
       'username',U.username,
       'created_at',U.created_at
     ) as user,
-    (select  count(F_P.post_id ) from favoritePosts as F_P where F_P.post_id = P.id group by F_P.post_id  ) as totalLike
+    (select  count(F_P.post_id ) 
+    from favoritePosts as F_P JOIN users 
+    ON users.id = F_P.user_id 
+    where F_P.post_id = P.id 
+    AND users.isDeleted IS NOT TRUE
+    group by F_P.post_id  
+    ) as totalLike
     FROM posts as P 
     join postStatus as S_P 
     on P.status_id = S_P.id
-    join users as U on U.id =P.user_id ;
+    join users as U on U.id =P.user_id 
+    WHERE U.isDeleted IS NOT TRUE
+    ;
     `
   );
 
@@ -32,12 +40,18 @@ const findOne = async (key, value) => {
     'username',U.username,
     'created_at',U.created_at
   ) as user,
-  (select  count(F_P.post_id ) from favoritePosts as F_P where F_P.post_id = P.id group by F_P.post_id  ) as totalLike
-
+  (select  count(F_P.post_id ) 
+    from favoritePosts as F_P JOIN users 
+    ON users.id = F_P.user_id 
+    where F_P.post_id = P.id 
+    AND users.isDeleted IS NOT TRUE
+    group by F_P.post_id  
+    ) as totalLike
   FROM posts as P 
   join postStatus as S_P 
   on P.status_id = S_P.id
-  join users as U on U.id =P.user_id  WHERE P.${key} = ?`,
+  join users as U on U.id =P.user_id  WHERE P.${key} = ? AND  U.isDeleted IS NOT TRUE
+  `,
     [value]
   );
   return data[0];
@@ -64,6 +78,16 @@ const getStatusPost = async (value) => {
 };
 
 const deletePost = async (id) => {
+  await db.query(
+    `DELETE FROM likeComments where id_comment in (
+
+    select id from comments WHERE post_id = ?
+  )`,
+    [id]
+  );
+
+  await db.query(`DELETE FROM comments where post_id = ?`, [id]);
+
   await db.query(`DELETE FROM favoritePosts where post_id = ?`, [id]);
   await db.query(`DELETE FROM posts WHERE id = ?`, [id]);
 };
