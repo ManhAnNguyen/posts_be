@@ -1,6 +1,8 @@
+const ROLES = require("../../constants/roles");
 const AppError = require("../../errors/AppError");
 const commentService = require("../../services/comments.service");
 const postService = require("../../services/posts.service");
+const roleService = require("../../services/role.service");
 
 const getAll = async (req, res) => {
   const data = await commentService.getAll();
@@ -27,4 +29,55 @@ const update = async (req, res) => {
   res.sendStatus(204);
 };
 
-module.exports = { getAll, create, update };
+const deleteComment = async (req, res) => {
+  const { user_id } = req.body;
+  const { id: idComment } = req.params;
+
+  const findComment = await commentService.findOne("id", idComment);
+  if (!findComment) throw new AppError("Comment not found", 404);
+  const roleUser = await roleService.getRolesUser(user_id);
+
+  const roles = roleUser.map((r) => r.role);
+
+  const { user_id: userIdComments, post_id } = findComment;
+  const findPost = await postService.findOne("id", post_id);
+
+  if (!idComment) throw new AppError("ID comment is must required", 400);
+
+  if (
+    roles.find((role) => role === ROLES.ADMIN) ||
+    findPost.user.id === user_id ||
+    userIdComments === user_id
+  ) {
+    await commentService.deleteComment(idComment);
+    res.send(200);
+  } else {
+    throw new AppError("Unauthorized", 401);
+  }
+};
+
+const likeComment = async (req, res) => {
+  const { user_id, idComment } = req.body;
+
+  if (!idComment) throw new AppError("ID comment is must required", 400);
+
+  await commentService.likeComments(idComment, user_id);
+  res.json(200);
+};
+
+const unLikeComment = async (req, res) => {
+  const { user_id, idComment } = req.body;
+
+  if (!idComment) throw new AppError("ID comment is must required", 400);
+  await commentService.unLikeComments(idComment, user_id);
+  res.json(200);
+};
+
+module.exports = {
+  getAll,
+  create,
+  update,
+  likeComment,
+  unLikeComment,
+  deleteComment,
+};
